@@ -1,81 +1,52 @@
-# ========================================
-# Base Stage: Alpine Linux with Bun
-# ========================================
+# Build stage
 FROM node:22-alpine AS base
 
-# ========================================
-# Dependencies Stage: Install Dependencies
-# ========================================
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-
-# Install turbo globally
-RUN npm install -g pnpm
-RUN pnpm install -g turbo
-
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-RUN mkdir -p apps packages
-COPY apps/*/package.json ./apps/
-COPY packages/ ./packages/
-
-RUN pnpm install --prod --ignore-scripts
-
-
-# ========================================
-# Builder Stage: Build the Application
-# ========================================
+# Install pnpm and wrangler globally
 FROM base AS builder
 WORKDIR /app
-
 RUN npm install -g pnpm wrangler
 
-# Copy workspace configuration and source code
+# Copy root package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY . .
-
-ENV CI=true
 
 # Install all dependencies (including devDependencies for build)
-RUN pnpm install 
+# ARM64 fix: .npmrc disables binary verification
+RUN pnpm install
 
-# Set environment variables for build
-ENV NEXT_TELEMETRY_DISABLED=1 \
-    NODE_ENV=production \
-    DOCKER_BUILD=true
+# Copy the rest of the code
+COPY . .
 
 # Build the application
-RUN cd apps/mail && pnpm run build
+RUN pnpm run build
 
-# ========================================
-# Runner Stage: Production Environment
-# ========================================
+# Runner stage
 FROM base AS runner
 WORKDIR /app
 
-RUN npm install -g wrangler
-
+# Create a non-root user
 RUN addgroup -S -g 1001 pnpm && \
     adduser -S -u 1001 nextjs -G pnpm
 
-# Set environment variables for build
-ENV NODE_ENV=production \
-    PORT=3000 \
-    HOSTNAME="0.0.0.0" \
-    NEXT_TELEMETRY_DISABLED=1
-
-# Copy entrypoint and run it
+# Copy scripts
 COPY scripts/docker/ /app/scripts
+
+# Make scripts executable
 RUN chmod -R +x /app/scripts/*
 
-# Copy the entire built application
-COPY --from=builder --chown=nextjs:pnpm /app ./
+# Copy built application from builder
+COPY --from=builder --chown=nextjs:pnpm /app/.next ./.next
+COPY --from=builder --chown=nextjs:pnpm /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:pnpm /app/package.json ./package.json
 
-# Switch to non-root user
-USER nextjs
+# Set environment variables
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Set server port and host
+# Expose port
 EXPOSE 3000
+
+# Set user
+USER nextjs
 
 # Start the server
 CMD ["/app/scripts/entrypoint.sh"]
