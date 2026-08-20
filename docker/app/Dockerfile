@@ -37,7 +37,7 @@ COPY . .
 ENV CI=true
 
 # Install all dependencies (including devDependencies for build)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install 
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1 \
