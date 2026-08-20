@@ -12,6 +12,9 @@ RUN npm install -g wrangler
 # Copy root package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 
+# Copy patches folder (required for pnpm install)
+COPY patches ./patches
+
 # Install all dependencies (including devDependencies for build)
 # ARM64 fix: disable strict version and binary verification
 ENV COREPACK_ENABLE_STRICT_VERSION=false
