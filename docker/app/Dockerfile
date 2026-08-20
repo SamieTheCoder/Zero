@@ -9,20 +9,15 @@ FROM base AS builder
 WORKDIR /app
 RUN npm install -g wrangler
 
-# Copy root package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-
-# Copy patches folder (required for pnpm install)
-COPY patches ./patches
+# Copy the complete monorepo before installing dependencies.
+# pnpm needs all apps/packages workspace manifests and patches available.
+COPY . .
 
 # Install all dependencies (including devDependencies for build)
 # ARM64 fix: disable strict version and binary verification
 ENV COREPACK_ENABLE_STRICT_VERSION=false
 ENV COREPACK_ENABLE_VERIFY=false
 RUN pnpm install
-
-# Copy the rest of the code
-COPY . .
 
 # Build the application
 RUN pnpm run build
