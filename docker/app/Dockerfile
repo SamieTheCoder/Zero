@@ -1,16 +1,21 @@
 # Build stage
 FROM node:22-alpine AS base
 
-# Install pnpm and wrangler globally
+# Enable corepack for pnpm
+RUN corepack enable pnpm
+
+# Install wrangler globally
 FROM base AS builder
 WORKDIR /app
-RUN npm install -g pnpm wrangler
+RUN npm install -g wrangler
 
 # Copy root package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 
 # Install all dependencies (including devDependencies for build)
-# ARM64 fix: .npmrc disables binary verification
+# ARM64 fix: disable strict version and binary verification
+ENV COREPACK_ENABLE_STRICT_VERSION=false
+ENV COREPACK_ENABLE_VERIFY=false
 RUN pnpm install
 
 # Copy the rest of the code
