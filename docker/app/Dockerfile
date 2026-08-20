@@ -20,6 +20,9 @@ ENV COREPACK_ENABLE_VERIFY=false
 RUN pnpm install
 
 # Build the application
+# Provide placeholder environment variables so Vite bakes them in
+ENV VITE_PUBLIC_BACKEND_URL="http://REPLACE-BACKEND-URL.com"
+ENV VITE_PUBLIC_APP_URL="http://REPLACE-APP-URL.com"
 RUN pnpm run build
 
 # Runner stage
@@ -30,20 +33,20 @@ WORKDIR /app
 RUN addgroup -S -g 1001 pnpm && \
     adduser -S -u 1001 nextjs -G pnpm
 
+# Install serve for static hosting
+RUN npm install -g serve
+
 # Copy scripts
 COPY scripts/docker/ /app/scripts
 
 # Make scripts executable
 RUN chmod -R +x /app/scripts/*
 
-# Copy built application from builder
-COPY --from=builder --chown=nextjs:pnpm /app/.next ./.next
-COPY --from=builder --chown=nextjs:pnpm /app/node_modules ./node_modules
-COPY --from=builder --chown=nextjs:pnpm /app/package.json ./package.json
+# Copy built SPA from builder
+COPY --from=builder --chown=nextjs:pnpm /app/apps/mail/build/client ./apps/mail/build/client
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
 
 # Expose port
 EXPOSE 3000
