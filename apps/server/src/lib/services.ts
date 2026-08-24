@@ -7,17 +7,12 @@ export const resend = () =>
     ? new Resend(env.RESEND_API_KEY)
     : { emails: { send: async (...args: unknown[]) => console.log(args) } };
 
-export const redis = () => new Redis({ url: env.REDIS_URL, token: env.REDIS_TOKEN });
+export const redis = () => {
+  return new Redis({ url: env.REDIS_URL, token: env.REDIS_TOKEN });
+};
 
 export const twilio = () => {
-  //   if (env.NODE_ENV === 'development' && !forceUseRealService) {
-  //     return {
-  //       messages: {
-  //         send: async (to: string, body: string) =>
-  //           console.log(`[TWILIO:MOCK] Sending message to ${to}: ${body}`),
-  //       },
-  //     };
-  //   }
+
 
   if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN || !env.TWILIO_PHONE_NUMBER) {
     throw new Error('Twilio is not configured correctly');

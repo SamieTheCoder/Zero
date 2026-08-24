@@ -732,7 +732,8 @@ export const mailRouter = router({
     const { activeConnection } = ctx;
     const executionCtx = getContext<HonoContext>().executionCtx;
     const { stub: agent } = await getZeroAgent(activeConnection.id, executionCtx);
-    return agent.getEmailAliases();
+    const aliases = await agent.getEmailAliases();
+    return aliases as { email: string; name?: string; primary?: boolean }[];
   }),
   snoozeThreads: activeDriverProcedure
     .input(

@@ -59,4 +59,5 @@ worker-configuration.d.ts
 .pnpm-store
 tsx-0/
 
-tools.json
+tools.json.env.prod
+.env.*

@@ -26,7 +26,7 @@ import { messageToXML, threadToXML } from './workflow-utils';
 import type { WorkflowContext } from './workflow-engine';
 import { bulkDeleteKeys } from '../lib/bulk-delete';
 import { getPromptName } from '../pipelines';
-import { env } from 'cloudflare:workers';
+import { env } from '../env';
 import { Effect } from 'effect';
 
 export type WorkflowFunction = (context: WorkflowContext) => Promise<any>;

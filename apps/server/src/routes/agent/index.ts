@@ -64,7 +64,7 @@ import { tools as authTools } from './tools';
 import { processToolCalls } from './utils';
 import { type ZeroEnv } from '../../env';
 import { type Connection } from 'agents';
-import { openai } from '@ai-sdk/openai';
+import { openai } from '../../lib/ai-provider';
 import * as schema from './db/schema';
 import { threads } from './db/schema';
 import { Effect, pipe } from 'effect';

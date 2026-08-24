@@ -205,14 +205,14 @@ export const createAuth = () => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
           const db = await getZeroDB(user.id);
           const connections = await db.findManyConnections();
-          const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
-          try {
-            await autumn.customers.delete(user.id);
-          } catch (error) {
-            console.error('Failed to delete Autumn customer:', error);
-            // Continue with deletion process despite Autumn failure
+          if (env.AUTUMN_SECRET_KEY) {
+            const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
+            try {
+              await autumn.customers.delete(user.id);
+            } catch (error) {
+              console.error('Failed to delete Autumn customer:', error);
+            }
           }
-
           const revokedAccounts = (
             await Promise.allSettled(
               connections.map(async (connection) => {
@@ -350,9 +350,10 @@ const createAuthConfig = () => {
       },
       cookiePrefix: env.NODE_ENV === 'development' ? 'better-auth-dev' : 'better-auth',
       crossSubDomainCookies: {
-        enabled: true,
+        enabled: env.NODE_ENV !== 'local' && env.NODE_ENV !== 'development',
         domain: env.COOKIE_DOMAIN,
       },
+      useSecureCookies: env.NODE_ENV !== 'local' && env.NODE_ENV !== 'development',
     },
     baseURL: env.VITE_PUBLIC_BACKEND_URL,
     trustedOrigins: [
@@ -363,6 +364,7 @@ const createAuthConfig = () => {
       'http://localhost:3000',
     ],
     session: {
+      storeSessionInDatabase: true,
       cookieCache: {
         enabled: true,
         maxAge: 60 * 60 * 24 * 30, // 30 days
