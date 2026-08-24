@@ -7,13 +7,13 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 # Copy workspace configuration and package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY package.json pnpm-workspace.yaml turbo.json ./
 COPY apps/server/package.json ./apps/server/
 COPY packages/ ./packages/
 COPY patches/ ./patches/
 
 # Install dependencies needed for migrations
-RUN pnpm config set verify-store-integrity false && pnpm install --no-frozen-lockfile
+RUN rm -f pnpm-lock.yaml && pnpm install
 
 # ========================================
 # Runner Stage: Production Environment

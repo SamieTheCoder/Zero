@@ -17,7 +17,7 @@ COPY . .
 # ARM64 fix: disable strict version and binary verification
 ENV COREPACK_ENABLE_STRICT_VERSION=false
 ENV COREPACK_ENABLE_VERIFY=false
-RUN pnpm config set verify-store-integrity false && pnpm install --no-frozen-lockfile
+RUN rm -f pnpm-lock.yaml && pnpm install
 
 # Build the application
 # Provide placeholder environment variables so Vite bakes them in
