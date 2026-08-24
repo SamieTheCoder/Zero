@@ -13,7 +13,7 @@ COPY packages/ ./packages/
 COPY patches/ ./patches/
 
 # Install dependencies needed for migrations
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # ========================================
 # Runner Stage: Production Environment
