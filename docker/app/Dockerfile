@@ -1,8 +1,14 @@
 # Build stage
 FROM node:22-alpine AS base
 
-# Enable corepack for pnpm
-RUN corepack enable pnpm
+# Pin pnpm to the version declared in package.json#packageManager.
+# Bare `pnpm` (or a corepack range) resolves to the latest major, which then
+# self-switches to the pinned version via the @pnpm/exe.<platform> native
+# binary. No stable @pnpm/exe.linux-arm64 exists, so that switch breaks the
+# build on arm64 hosts. Pinning avoids the switch entirely.
+ARG PNPM_VERSION=10.15.0
+RUN npm install -g "pnpm@${PNPM_VERSION}"
+ENV npm_config_manage_package_manager_versions=false
 
 # Install wrangler globally
 FROM base AS builder
@@ -13,11 +19,9 @@ RUN npm install -g wrangler
 # pnpm needs all apps/packages workspace manifests and patches available.
 COPY . .
 
-# Install all dependencies (including devDependencies for build)
-# ARM64 fix: disable strict version and binary verification
-ENV COREPACK_ENABLE_STRICT_VERSION=false
-ENV COREPACK_ENABLE_VERIFY=false
-RUN rm -f pnpm-lock.yaml && pnpm install
+# Install all dependencies (including devDependencies for build) from the
+# committed lockfile so the image is reproducible.
+RUN pnpm install --frozen-lockfile
 
 # Build the application
 # Provide placeholder environment variables so Vite bakes them in
